@@ -1,13 +1,19 @@
 package router
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+	"pandaBook/controller"
+)
 
 func Init() *gin.Engine {
 	router := gin.Default()
-	router.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
+
+	router.GET("/list", func(c *gin.Context) {
+		new(controller.D4jController).List(c)
+	})
+
+	router.GET("/detail", func(c *gin.Context) {
+		new(controller.D4jController).Detail()
 	})
 	return router
 }
