@@ -15,5 +15,9 @@ func (d *D4jController) List(ctx *gin.Context) {
 }
 
 func (d *D4jController) Detail() {
+
 	new(model.D4jModel).Detail()
+
 }
+
+

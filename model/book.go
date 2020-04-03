@@ -1,7 +1,6 @@
 package model
 
 type Book struct {
-	BaseModel
 	ID            int64 `gorm:"primary_key"`
 	Title         string
 	Author        string  `gorm:default:"-"`

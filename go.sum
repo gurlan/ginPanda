@@ -8,6 +8,8 @@ github.com/antchfx/xmlquery v1.2.3 h1:++irmxT+Pkn55FGtSTkUTHarZ6E0b1yyR+UiPZRA+e
 github.com/antchfx/xmlquery v1.2.3/go.mod h1:/+CnyD/DzHRnv2eRxrVbieRU/FIF6N0C+7oTtyUtCKk=
 github.com/antchfx/xpath v1.1.4 h1:naPIpjBGeT3eX0Vw7E8iyHsY8FGt6EbGdkcd8EZCo+g=
 github.com/antchfx/xpath v1.1.4/go.mod h1:Yee4kTMuNiPYJ7nSNorELQMr1J33uOpXDMByNYhvtNk=
+github.com/astaxie/goredis v0.0.0-20160824151742-1f1c6e6fc3a8 h1:XN8UQV0Zro09FeYjkwEdGTmP+QFXfc95EDXKRxhOUAs=
+github.com/astaxie/goredis v0.0.0-20160824151742-1f1c6e6fc3a8/go.mod h1:i0oI4E/DxCwoJG6iblWnjgLaTrbSEOtUxLtcZA6i7ac=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

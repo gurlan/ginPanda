@@ -15,5 +15,7 @@ func Init() *gin.Engine {
 	router.GET("/detail", func(c *gin.Context) {
 		new(controller.D4jController).Detail()
 	})
+
+
 	return router
 }
