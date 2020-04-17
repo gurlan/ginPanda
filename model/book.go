@@ -1,5 +1,10 @@
 package model
 
+import "github.com/gocolly/colly"
+
+var book Book
+var nowPage = 1
+var collector *colly.Collector
 type Book struct {
 	ID            int64 `gorm:"primary_key"`
 	Title         string

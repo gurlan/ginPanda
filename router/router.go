@@ -16,6 +16,13 @@ func Init() *gin.Engine {
 		new(controller.D4jController).Detail()
 	})
 
+	router.GET("/it/list", func(c *gin.Context) {
+		new(controller.ItPandaController).List()
+	})
+
+
+
+
 
 	return router
 }

@@ -17,9 +17,8 @@ type D4jModel struct {
 	Book
 }
 
-var book Book
-var nowPage = 1
-var collector *colly.Collector
+
+
 
 func (d *D4jModel) GetCollector() {
 
