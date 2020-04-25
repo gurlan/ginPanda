@@ -1,15 +1,13 @@
 package model
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gocolly/colly"
-	"io"
 	"log"
 	"net"
 	"net/http"
-	"reflect"
+	"pandaBook/lib"
 	"regexp"
 	"strings"
 	"sync"
@@ -119,7 +117,7 @@ func (it *ItPandaModel) List() {
 			downloadUrl, _ := dom.Find(".mr-2").Last().Attr("href") //站内下载链接
 
 			log.Println("downloadUrl:" + downloadUrl)
-			it.Mutex.Lock()
+
 			it.insert(book, e.Request.AbsoluteURL(downloadUrl))
 		}
 
@@ -140,7 +138,7 @@ func (it *ItPandaModel) insert(book Book, downLoadUrl string) {
 			it.insert(book,downLoadUrl)
 		}
 	}()
-	html := it.Get(downLoadUrl)
+	html := lib.HttpGet(downLoadUrl)
 //	log.Println(html)
 	dom, err := goquery.NewDocumentFromReader(strings.NewReader(html))
 	if err != nil {
@@ -155,52 +153,10 @@ func (it *ItPandaModel) insert(book Book, downLoadUrl string) {
 	}
 	book.BaiduUrl = baiduUrl
 	book.BaiduPassword = baiduPassword
-	SmartPrint(book)
+	lib.SmartPrint(book)
 	db.NewRecord(book)
 	db.Create(&book)
 
-	it.Mutex.Unlock()
 }
 
-// 发送GET请求
-// url：         请求地址
-// response：    请求返回的内容
-func (it *ItPandaModel) Get(url string) string {
 
-
-	// 超时时间：5秒
-	client := &http.Client{Timeout: 5 * time.Second}
-	resp, err := client.Get(url)
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
-	var buffer [512]byte
-	result := bytes.NewBuffer(nil)
-	for {
-		n, err := resp.Body.Read(buffer[0:])
-		result.Write(buffer[0:n])
-		if err != nil && err == io.EOF {
-			break
-		} else if err != nil {
-			panic(err)
-		}
-	}
-
-	return result.String()
-}
-func SmartPrint(i interface{}) {
-	var kv = make(map[string]interface{})
-	vValue := reflect.ValueOf(i)
-	vType := reflect.TypeOf(i)
-	for i := 0; i < vValue.NumField(); i++ {
-		kv[vType.Field(i).Name] = vValue.Field(i)
-	}
-	fmt.Println("获取到数据:")
-	for k, v := range kv {
-		fmt.Print(k)
-		fmt.Print(":")
-		fmt.Print(v)
-		fmt.Println()
-	}
-}

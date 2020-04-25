@@ -8,21 +8,13 @@ import (
 func Init() *gin.Engine {
 	router := gin.Default()
 
-	router.GET("/list", func(c *gin.Context) {
+	router.GET("/d4j/list", func(c *gin.Context) {
 		new(controller.D4jController).List(c)
-	})
-
-	router.GET("/detail", func(c *gin.Context) {
-		new(controller.D4jController).Detail()
 	})
 
 	router.GET("/it/list", func(c *gin.Context) {
 		new(controller.ItPandaController).List()
 	})
-
-
-
-
 
 	return router
 }

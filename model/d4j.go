@@ -4,21 +4,19 @@ import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gocolly/colly"
-	"github.com/gocolly/colly/queue"
 	"log"
 	"net"
 	"net/http"
+	"pandaBook/lib"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 )
 
 type D4jModel struct {
 	Book
 }
-
-
-
 
 func (d *D4jModel) GetCollector() {
 
@@ -83,47 +81,28 @@ func (d *D4jModel) List() {
 			fmt.Printf("Link found: %d ->%s\n", index, link)
 			reg := regexp.MustCompile(`https://www.d4j.cn/\d*.html$`)
 			result := reg.FindAllStringSubmatch(link, -1)
-			if len(result) > 0 {
-				fmt.Println("Inserting", result[0][0])
-				PutInQueen(result[0][0])
+			if len(result) > 0 && !HasInSet(link) {
+				collector.Visit(e.Request.AbsoluteURL(link))
 			} else {
 				fmt.Println("Passing", link)
-			}
-			if index >= 15 {
-				nowPage += 1
-				collector.Visit("https://www.d4j.cn/page/" + strconv.Itoa(nowPage))
 			}
 		})
 
 	})
 
-	// Before making a request print "Visiting ..."
-	collector.OnRequest(func(r *colly.Request) {
-		fmt.Println("Visiting", r.URL.String())
-	})
-
-	collector.Visit("https://www.d4j.cn/page/" + strconv.Itoa(nowPage))
-}
-
-func (d *D4jModel) Detail() {
-
-	d.GetCollector()
-	// Before making a request print "Visiting ..."
-	collector.OnRequest(func(r *colly.Request) {
-		fmt.Println("Visiting", r.URL.String())
-	})
-
 	collector.OnHTML("#container", func(e *colly.HTMLElement) {
 
 		dom := e.DOM
-		title := dom.Find(".kratos-entry-title").Text() //标题
+		title := dom.Find(".down-price span").Text() //标题
 		//fmt.Println("title", title)
 		image, _ := dom.Find(".kratos-post-content img").Attr("src") //封面
 		//fmt.Println("image", image)
 		introduce := dom.Find(".title-h2").Next().Text() //介绍
 		//fmt.Println("introduce", introduce)
-		downloadUrl, _ := dom.Find(".downbtn").Attr("href") //站内下载链接
-
+		downloadUrl, exists := dom.Find(".downbtn").Attr("href") //站内下载链接
+		if !exists {
+			return
+		}
 		book = Book{
 			Title:       title,
 			Introduce:   introduce,
@@ -136,50 +115,49 @@ func (d *D4jModel) Detail() {
 			Createtime:  time.Now().Unix(),
 			Status:      1,
 		}
-		d.download(downloadUrl, book)
 
+		log.Println("downloadUrl:" + downloadUrl)
+
+		d.insert(book, e.Request.AbsoluteURL(downloadUrl))
 	})
 
-	q, _ := queue.New(
-		2,                                           // Number of consumer threads
-		&queue.InMemoryQueueStorage{MaxSize: 10000}, // Use default queue storage
-	)
+	// Before making a request print "Visiting ..."
+	collector.OnRequest(func(r *colly.Request) {
+		fmt.Println("Visiting", r.URL.String())
+	})
 
-	for {
-		// Add URLs to the queue
-		url := RPopFromQueen()
-		if url == "" {
-			break
-		}
-		q.AddURL(url)
-	}
-	// Consume URLs
-	q.Run(collector)
+	collector.Visit("https://www.d4j.cn/page/" + strconv.Itoa(nowPage))
 }
 
-func (d *D4jModel) download(url string, book Book) {
-	d.GetCollector()
-	collector.Visit(url)
-	collector.OnHTML(".wrap", func(e *colly.HTMLElement) {
-
-		dom := e.DOM
-		baiduUrl, _ := dom.Find(".downfile").Eq(3).Find("a").Attr("href")
-		baiduPassword := dom.Find(".plus_l").Find("li").Eq(3).Children().Text()
-
-		authorStr := dom.Find(".plus_l").Find("li").Eq(2).Text()
-		reg := regexp.MustCompile(`作者信息 ：【(.*?)】`)
-		result := reg.FindAllStringSubmatch(authorStr, -1)
-		author := "-"
-		if len(result) > 0 {
-			author = result[0][1]
+func (d *D4jModel) insert(book Book, downLoadUrl string) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Recovered in f", r)
+			d.insert(book, downLoadUrl)
 		}
+	}()
+	html := lib.HttpGet(downLoadUrl)
+	dom, err := goquery.NewDocumentFromReader(strings.NewReader(html))
+	if err != nil {
+		log.Println(err.Error())
+	}
+	baiduUrl, _ := dom.Find(".downfile").Eq(3).Find("a").Attr("href")
+	baiduPassword := dom.Find(".plus_l").Find("li").Eq(3).Children().Text()
 
-		book.Author = author
-		book.BaiduUrl = baiduUrl
-		book.BaiduPassword = baiduPassword
+	authorStr := dom.Find(".plus_l").Find("li").Eq(2).Text()
+	reg := regexp.MustCompile(`作者信息 ：【(.*?)】`)
+	result := reg.FindAllStringSubmatch(authorStr, -1)
+	author := "-"
+	if len(result) > 0 {
+		author = result[0][1]
+	}
+	book.Author = author
+	book.BaiduUrl = baiduUrl
+	book.BaiduPassword = baiduPassword
+	lib.SmartPrint(book)
+	db.NewRecord(book)
+	db.Create(&book)
+	PutInSet(book.OriginalUrl) //存入redis集合
+	book = Book{}
 
-		db.NewRecord(book)
-		db.Create(&book)
-		book = Book{}
-	})
 }

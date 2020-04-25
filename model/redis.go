@@ -9,9 +9,8 @@ var redisClient goredis.Client
 const BookUrls = "d4j_book_urls"
 const HasSaveUrls = "d4j_has_save_urls"
 
-
 func init() {
-	redisClient.Addr = "127.0.0.1:6379"
+	redisClient.Addr = "127.0.0.1:30022"
 
 }
 func PutInQueen(url string) {
